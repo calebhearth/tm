@@ -1,14 +1,24 @@
+#!/bin/sh
 tm() {
-  if [ -z "$TMUX" ]; then
-    # not in tmux
-    tmux new-session -As $1
+  if [ -z $1 ]; then
+    target_session=$(cat /tmp/previous-tmux-session)
+    tm $target_session
   else
-    # inside tmux
-    if [ tmux has-session $1 ]; then
-      tmux switch-client -t $1
+    if [ -z "$TMUX" ]; then
+      tmux new-session -As $1
     else
-      TMUX= tmux new-session -ds $1
+      record_previous_session
+      if ! tmux has-session -t $1 2>/dev/null; then
+        TMUX= tmux new-session -ds $1
+      fi
       tmux switch-client -t $1
     fi
- fi
+  fi
 }
+
+record_previous_session() {
+  current_session=$(tmux list-sessions | grep '(attached)$' | cut -d: -f 1)
+  echo $current_session > /tmp/previous-tmux-session
+}
+
+tm $1
