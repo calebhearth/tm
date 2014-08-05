@@ -16,6 +16,9 @@ Examples:
 	Switch to the previous session (from with a tmux session):
 	$PROGNAME
 
+	Show this help (from outside tmux):
+	$PROGNAME
+
 	Attach to a session:
 	$PROGNAME existing-session-name
 
@@ -112,7 +115,7 @@ switchToSession() {
 }
 
 case $1 in
-"") toggleLastSession;;
+"") inTmux && toggleLastSession || usage;;
 "--help") usage;;
 *) switchToSession $1;;
 esac
