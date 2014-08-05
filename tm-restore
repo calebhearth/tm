@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -e
+
+readonly PROGNAME=$(basename $0)
+readonly ARGS="$@"
+
+terminalSize() {
+	stty size 2>/dev/null | awk '{ printf "-x%d -y%d", $2, $1 }'
+}
+
+sessionExists() {
+	tmux has-session -t "$1" 2>/dev/null
+}
+
+addWindow() {
+	local sessionName=$1
+	local windowName=$2
+	local workingDirectory=$3
+	tmux new-window -d \
+		-t "$sessionName:" \
+		-n "$windowName" \
+		-c "$workingDirectory"
+}
+
+newSession() {
+	local sessionName=$1
+	local windowName=$2
+	local workingDirectory=$3
+	local dimensions=$4
+	tmux new-session -d \
+		-s "$sessionName" \
+		-n "$windowName" \
+		-c "$workingDirectory" \
+		$dimensions
+}
+
+directoryExists() {
+	local dir=$1
+	[[ -d "$dir" ]]
+}
+
+restore() {
+	tmux start-server
+	local count=0
+	local sessionName=
+	local windowName=
+	local workingDirectory=
+
+	while IFS=$'\t' read sessionName windowName workingDirectory; do
+		if directoryExists $workingDirectory; then
+			if sessionExists "$sessionName"; then
+				addWindow "$sessionName" "$windowName" "$workingDirectory"
+			else
+				newSession "$sessionName" "$windowName" "$workingDirectory" windowSize
+				count=$(( count + 1 ))
+			fi
+		fi
+	done < ~/.tm-session
+
+	echo "restored $count sessions"
+}
+
+restore $ARGS

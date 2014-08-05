@@ -1,4 +1,5 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
+set -e
 
 readonly PROGNAME=$(basename $0)
 readonly ARGS="$@"
@@ -50,13 +51,15 @@ attachToSession() {
 }
 
 isDirectoryInPath() {
-	[[ -n "$WORKING_DIRECTORY" ]];
+	local dir=$1
+	[[ -n "$dir" ]];
 }
 
 createSession() {
 	local sessionName=$1
-	if isDirectoryInPath $sessionName; then
-		TMUX= tmux new-session -ds $1 -c $WORKING_DIRECTORY
+	local wd=$(workingDirectory $sessionName)
+	if isDirectoryInPath $wd; then
+		TMUX= tmux new-session -ds $1 -c $wd
 	else
 		TMUX= tmux new-session -ds $1
 	fi
@@ -76,11 +79,11 @@ workingDirectory() {
 		pwd
 		)
 	fi
-	return $WORKING_DIRECTORY
+	echo "$WORKING_DIRECTORY"
 }
 
 switchFromInsideTmux() {
-	local $sessionname=$1
+	local sessionname=$1
 
 	if sessionExists $sessionName; then
 		attachToSession $sessionName;
@@ -97,7 +100,7 @@ createSessionInDirectory() {
 }
 
 switchFromOutsideTmux() {
-	local wd=workingDirectory $sessionName
+	local wd=$(workingDirectory $sessionName)
 	if isDirectoryInPath $wd; then
 		createSessionInDirectory $sessionName $wd
 	else
@@ -117,5 +120,6 @@ switchToSession() {
 case $1 in
 "") inTmux && toggleLastSession || usage;;
 "--help") usage;;
+save | restore) "tm-$1" ${*:2};;
 *) switchToSession $1;;
 esac

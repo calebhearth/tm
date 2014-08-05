@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -e
+
+readonly PROGNAME=$(basename $0)
+readonly ARGS="$@"
+
+dump() {
+	local d=$'\t'
+	tmux list-windows -a -F "#S${d}#W${d}#{pane_current_path}"
+}
+
+save() {
+	dump > ~/.tm-session
+}
+
+save $ARGS
