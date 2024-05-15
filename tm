@@ -100,6 +100,7 @@ createSessionInDirectory() {
 }
 
 switchFromOutsideTmux() {
+	local sessionName=$1
 	local wd=$(workingDirectory $sessionName)
 	if isDirectoryInPath $wd; then
 		createSessionInDirectory $sessionName $wd
@@ -110,6 +111,8 @@ switchFromOutsideTmux() {
 
 switchToSession() {
 	local sessionName=$1
+	cdpath=(. ~/code);
+	cd $sessionName > /dev/null 2>&1
 	if inTmux; then
 		switchFromInsideTmux $sessionName
 	else
